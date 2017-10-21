@@ -1,0 +1,23 @@
+{
+  "name": "life-analytics-robot",
+  "version": "1.0.0",
+  "description": "Data collection tool for life-analytics",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/temaptz/life-analytics-robot.git"
+  },
+  "author": "temaptz@gmail.com",
+  "homepage": "https://github.com/temaptz/life-analytics-robot#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "cron": "^1.3.0",
+    "request": "^2.83.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.12.1"
+  }
+}
