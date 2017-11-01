@@ -5,6 +5,8 @@ const config  = require('./config');
 
 const jobTask = () => {
 
+    console.log(new Date());
+
     request.get(
         {
             url     : config.url,
@@ -35,7 +37,8 @@ sendValueToLifeAnalytics = (newValue) => {
             url  : config.analyticsUrl,
             body : JSON.stringify({value : newValue}),
             headers: {
-                'Authorization': `GraphHash ${config.analyticsHash}`
+                'Authorization' : `GraphHash ${config.analyticsHash}`,
+                'Content-Type'  : 'application/json'
             }
         }, (err, resp, body) => {
 
