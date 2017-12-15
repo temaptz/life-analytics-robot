@@ -20,7 +20,11 @@ const jobTask = () => {
                 const $ = cheerio.load(body);
                 const text = $(config.selector).text();
                 if ( text && text.length > 0 ) {
-                    const newValue = parseFloat(text);
+                    const numberOfPointsInText= text.split('.').length - 1;
+                    let newValue = parseFloat(text.replace(/\./g, ''));
+                    if ( numberOfPointsInText - 1 > 0 ) {
+                        newValue = newValue / 1000 * ( numberOfPointsInText - 1 )
+                    }
                     console.log(`Recieved new value: ${newValue}`);
                     sendValueToLifeAnalytics(newValue);
                 }
