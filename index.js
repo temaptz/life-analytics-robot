@@ -1,41 +1,43 @@
 const CronJob = require('cron').CronJob;
 const request = require('request');
 const cheerio = require('cheerio');
-const config  = require('./config');
+const fs      = require('fs');
+const confDir = `${__dirname}/conf.d`;
 
-const jobTask = () => {
+const createCronJob = (config) => {
+    const jobTask = () => {
 
-    console.log(new Date());
+        logMessage('startTask', config.configPath);
 
-    request.get(
-        {
-            url     : config.url,
-            headers : {
-                'User-Agent': config.userAgent
-            }
-        }, (err, resp, body) => {
+        request.get(
+            {
+                url     : config.url,
+                headers : {
+                    'User-Agent': config.userAgent
+                }
+            }, (err, resp, body) => {
 
-            if (!err && resp.statusCode == 200) {
+                if (!err && resp.statusCode == 200) {
 
-                const $ = cheerio.load(body);
-                const text = $(config.selector).text();
-                if ( text && text.length > 0 ) {
-                    const numberOfPointsInText= text.split('.').length - 1;
-                    let newValue = parseFloat(text.replace(/\./g, ''));
-                    if ( numberOfPointsInText - 1 > 0 ) {
-                        newValue = newValue / 1000 * ( numberOfPointsInText - 1 )
+                    const $ = cheerio.load(body);
+                    const text = $(config.selector).text();
+                    if ( text && text.length > 0 ) {
+                        let newValue = parseFloat(text.replace(/\./g, ''));
+                        logMessage(`Recieved new value: ${newValue}`, config.configPath);
+                        sendValueToLifeAnalytics(newValue, config);
                     }
-                    console.log(`Recieved new value: ${newValue}`);
-                    sendValueToLifeAnalytics(newValue);
+
                 }
 
-            }
+            });
+    };
 
-        });
+    const job = new CronJob(config.cronTime, jobTask);
+    job.start();
 };
 
 // Отправка данных в life-analytics
-sendValueToLifeAnalytics = (newValue) => {
+sendValueToLifeAnalytics = (newValue, config) => {
     request.post(
         {
             url  : config.analyticsUrl,
@@ -44,20 +46,30 @@ sendValueToLifeAnalytics = (newValue) => {
                 'Authorization' : `GraphHash ${config.analyticsHash}`,
                 'Content-Type'  : 'application/json'
             }
-        }, (err, resp, body) => {
+        }, (err, resp) => {
 
             if (!err && resp.statusCode == 200) {
 
-                console.log(`New value sent`);
+                logMessage(`New value sent`, config.configPath);
 
             } else {
 
-                console.log(`Error sending new value`);
+                logMessage(`Error sending new value`, config.configPath);
 
             }
 
         });
 };
 
-const job = new CronJob(config.cronTime, jobTask);
-job.start();
+const logMessage = (message, name='') => {
+    console.log(`[${name}] [${new Date()}] ${message}`);
+};
+
+fs
+    .readdirSync(confDir)
+    .forEach((file) => {
+        const configPath = `${confDir}/${file}`;
+        const config = require(configPath);
+        config.configPath = configPath;
+        createCronJob(config);
+    });
